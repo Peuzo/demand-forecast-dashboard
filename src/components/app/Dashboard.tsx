@@ -36,20 +36,20 @@ export function Dashboard({ onLogout }: { onLogout: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const model = useMemo(() => buildModel(data.months), [data]);
-  const firstYear = data.months[0].year;
+  const firstM = data.months[0]!, lastM = data.months[data.months.length - 1]!;
+  const firstYear = firstM.year;
   const years = Array.from({ length: Math.max(now.getFullYear() + 10, year + 2) - firstYear + 1 }, (_, i) => firstYear + i);
 
   const cur = valueAt(data.months, model, year, month);
-  const prevYM = month === 1 ? [year - 1, 12] : [year, month - 1];
-  const prev = valueAt(data.months, model, prevYM[0], prevYM[1]);
+  const prev = month === 1 ? valueAt(data.months, model, year - 1, 12) : valueAt(data.months, model, year, month - 1);
   const pct = (a: number, b: number) => (b ? ((a - b) / b) * 100 : 0);
   const margin = cur.revenue ? ((cur.revenue - cur.expenses) / cur.revenue) * 100 : 0;
   const prevMargin = prev.revenue ? ((prev.revenue - prev.expenses) / prev.revenue) * 100 : 0;
 
   const series = useMemo(() => {
     const out = [];
-    const start = data.months[0].year * 12 + data.months[0].month - 1;
-    const end = Math.max(year * 12 + month - 1, data.months.at(-1)!.year * 12 + data.months.at(-1)!.month - 1 + 6);
+    const start = firstM.year * 12 + firstM.month - 1;
+    const end = Math.max(year * 12 + month - 1, lastM.year * 12 + lastM.month - 1 + 6);
     for (let i = start; i <= end; i++) {
       const p = valueAt(data.months, model, Math.floor(i / 12), (i % 12) + 1);
       out.push({ label: `${MONTHS[p.month - 1].slice(0, 3)}/${String(p.year).slice(2)}`, ...p,
@@ -57,7 +57,7 @@ export function Dashboard({ onLogout }: { onLogout: () => void }) {
         histExp: p.forecast ? null : p.expenses, prevExp: p.forecast ? p.expenses : null });
     }
     return out;
-  }, [data, model, year, month]);
+  }, [data, model, year, month, firstM, lastM]);
 
   const yearRows = MONTHS.map((_, i) => valueAt(data.months, model, year, i + 1));
 

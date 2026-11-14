@@ -17,7 +17,7 @@ function parseMonth(v: unknown): number {
 function rowDate(row: Record<string, unknown>) {
   const d = pick(row, ["data", "periodo", "date"]);
   if (d instanceof Date) return { year: d.getFullYear(), month: d.getMonth() + 1 };
-  if (typeof d === "string") { const m = d.match(/(\d{1,2})[/-](\d{4})/); if (m) return { year: +m[2], month: +m[1] }; }
+  if (typeof d === "string") { const m = d.match(/(\d{1,2})[/-](\d{4})/); if (m) return { year: Number(m[2]), month: Number(m[1]) }; }
   return { year: num(pick(row, ["ano", "year"])), month: parseMonth(pick(row, ["mes", "month"])) };
 }
 
@@ -25,7 +25,7 @@ export async function parseWorkbook(file: File): Promise<Dataset> {
   const wb = XLSX.read(await file.arrayBuffer(), { cellDates: true });
   const sheet = (names: string[]) => {
     const n = wb.SheetNames.find((s) => names.some((x) => norm(s).includes(x)));
-    return n ? XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[n]) : [];
+    return n ? XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[n]!) : [];
   };
   const map = new Map<string, MonthRecord>();
   const get = (y: number, m: number) => {
@@ -35,7 +35,7 @@ export async function parseWorkbook(file: File): Promise<Dataset> {
   };
   const fat = sheet(["fatur", "receita", "venda"]);
   const gas = sheet(["gasto", "despesa", "custo"]);
-  const first = fat.length ? fat : XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0]]);
+  const first = fat.length ? fat : XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0] ?? ""]!);
   for (const r of first) {
     const { year, month } = rowDate(r); if (!year || !month) continue;
     const rec = get(year, month);
