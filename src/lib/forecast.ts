@@ -12,7 +12,7 @@ export function sampleDataset(): Dataset {
     const i = (y - 2023) * 12 + m;
     const base = 120000 + i * 1800;
     const noise = 1 + Math.sin(i * 1.7) * 0.04;
-    const revenue = Math.round(base * seasonal[m - 1] * noise);
+    const revenue = Math.round(base * (seasonal[m - 1] ?? 1) * noise);
     months.push({ year: y, month: m, revenue, expenses: Math.round(revenue * (0.62 + Math.cos(i) * 0.03)), sales: Math.round(revenue / 38) });
   }
   const categories: CategoryRecord[] = [
@@ -30,7 +30,7 @@ const idx = (r: { year: number; month: number }) => r.year * 12 + (r.month - 1);
 function regression(xs: number[], ys: number[]) {
   const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
   let num = 0, den = 0;
-  xs.forEach((x, i) => { num += (x - mx) * (ys[i] - my); den += (x - mx) ** 2; });
+  xs.forEach((x, i) => { num += (x - mx) * ((ys[i] ?? 0) - my); den += (x - mx) ** 2; });
   const slope = den ? num / den : 0;
   return { slope, intercept: my - slope * mx };
 }
@@ -58,7 +58,7 @@ export function valueAt(months: MonthRecord[], model: ReturnType<typeof buildMod
   const real = months.find((r) => r.year === year && r.month === month);
   if (real) return { ...real, forecast: false };
   const x = year * 12 + month - 1;
-  const f = (k: keyof typeof model) => Math.max(0, Math.round((model[k].intercept + model[k].slope * x) * model[k].season[month - 1]));
+  const f = (k: keyof typeof model) => Math.max(0, Math.round((model[k].intercept + model[k].slope * x) * (model[k].season[month - 1] ?? 1)));
   return { year, month, revenue: f("revenue"), expenses: f("expenses"), sales: f("sales"), forecast: true };
 }
 
