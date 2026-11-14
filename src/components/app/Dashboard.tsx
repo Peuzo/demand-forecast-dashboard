@@ -52,7 +52,7 @@ export function Dashboard({ onLogout }: { onLogout: () => void }) {
     const end = Math.max(year * 12 + month - 1, lastM.year * 12 + lastM.month - 1 + 6);
     for (let i = start; i <= end; i++) {
       const p = valueAt(data.months, model, Math.floor(i / 12), (i % 12) + 1);
-      out.push({ label: `${MONTHS[p.month - 1].slice(0, 3)}/${String(p.year).slice(2)}`, ...p,
+      out.push({ label: `${MONTHS[p.month - 1]!.slice(0, 3)}/${String(p.year).slice(2)}`, ...p,
         histRev: p.forecast ? null : p.revenue, prevRev: p.forecast ? p.revenue : null,
         histExp: p.forecast ? null : p.expenses, prevExp: p.forecast ? p.expenses : null });
     }
