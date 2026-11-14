@@ -1,23 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Login } from "@/components/app/Login";
+import { Dashboard } from "@/components/app/Dashboard";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "DemandaPro — Previsão de Demanda" },
+      { name: "description", content: "Previsão de demanda e gestão financeira com tendência e sazonalidade." },
+      { property: "og:title", content: "DemandaPro — Previsão de Demanda" },
+      { property: "og:description", content: "Previsão de demanda e gestão financeira com tendência e sazonalidade." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => { setAuthed(sessionStorage.getItem("dp-auth") === "1"); }, []);
+  const login = () => { sessionStorage.setItem("dp-auth", "1"); setAuthed(true); };
+  const logout = () => { sessionStorage.removeItem("dp-auth"); setAuthed(false); };
+  return authed ? <Dashboard onLogout={logout} /> : <Login onSuccess={login} />;
 }
